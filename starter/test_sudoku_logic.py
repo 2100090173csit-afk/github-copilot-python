@@ -298,3 +298,67 @@ class TestCountSolutions:
 
         assert count == 2, \
              "count_solutions should stop after finding 2 solutions"
+
+
+class TestDifficultyMapping:
+    """Tests for difficulty level mapping to clue counts."""
+
+    def test_difficulty_levels_defined(self):
+        """Verify difficulty levels are properly defined."""
+        assert hasattr(sudoku_logic, 'DIFFICULTY_LEVELS'), "DIFFICULTY_LEVELS should be defined"
+        assert 'easy' in sudoku_logic.DIFFICULTY_LEVELS, "Easy should be defined"
+        assert 'medium' in sudoku_logic.DIFFICULTY_LEVELS, "Medium should be defined"
+        assert 'hard' in sudoku_logic.DIFFICULTY_LEVELS, "Hard should be defined"
+
+    def test_difficulty_clue_counts(self):
+        """Verify correct clue counts for each difficulty."""
+        assert sudoku_logic.DIFFICULTY_LEVELS['easy'] == 40, "Easy should be 40 clues"
+        assert sudoku_logic.DIFFICULTY_LEVELS['medium'] == 35, "Medium should be 35 clues"
+        assert sudoku_logic.DIFFICULTY_LEVELS['hard'] == 30, "Hard should be 30 clues"
+
+    def test_default_difficulty_is_medium(self):
+        """Verify default difficulty is medium."""
+        assert sudoku_logic.DEFAULT_DIFFICULTY == 'medium', "Default should be medium"
+
+    def test_get_clues_for_difficulty_easy(self):
+        """Verify get_clues_for_difficulty returns correct value for easy."""
+        clues = sudoku_logic.get_clues_for_difficulty('easy')
+        assert clues == 40, "Easy should return 40 clues"
+
+    def test_get_clues_for_difficulty_medium(self):
+        """Verify get_clues_for_difficulty returns correct value for medium."""
+        clues = sudoku_logic.get_clues_for_difficulty('medium')
+        assert clues == 35, "Medium should return 35 clues"
+
+    def test_get_clues_for_difficulty_hard(self):
+        """Verify get_clues_for_difficulty returns correct value for hard."""
+        clues = sudoku_logic.get_clues_for_difficulty('hard')
+        assert clues == 30, "Hard should return 30 clues"
+
+    def test_get_clues_for_difficulty_case_insensitive(self):
+        """Verify difficulty is case insensitive."""
+        for variant in ['EASY', 'Easy', 'eAsY']:
+            clues = sudoku_logic.get_clues_for_difficulty(variant)
+            assert clues == 40, f"Difficulty {variant} should be case insensitive"
+
+    def test_get_clues_for_difficulty_with_whitespace(self):
+        """Verify difficulty handles leading/trailing whitespace."""
+        clues = sudoku_logic.get_clues_for_difficulty('  hard  ')
+        assert clues == 30, "Difficulty should strip whitespace"
+
+    def test_get_clues_for_difficulty_invalid_defaults_to_medium(self):
+        """Verify invalid difficulty defaults to medium."""
+        for invalid in ['invalid', 'expert', 'beginner', 'unknown']:
+            clues = sudoku_logic.get_clues_for_difficulty(invalid)
+            assert clues == 35, f"Invalid difficulty {invalid} should default to medium (35)"
+
+    def test_get_clues_for_difficulty_integer_passthrough(self):
+        """Verify integer clue counts are passed through unchanged."""
+        for clue_count in [20, 30, 35, 40, 50]:
+            clues = sudoku_logic.get_clues_for_difficulty(clue_count)
+            assert clues == clue_count, f"Integer {clue_count} should pass through unchanged"
+
+    def test_get_clues_for_difficulty_none_defaults_to_medium(self):
+        """Verify None defaults to medium."""
+        clues = sudoku_logic.get_clues_for_difficulty(None)
+        assert clues == 35, "None should default to medium (35)"

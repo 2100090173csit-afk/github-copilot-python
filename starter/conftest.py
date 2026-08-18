@@ -27,6 +27,8 @@ def client(flask_app):
         # Reset the global CURRENT state before each test
         app_module.CURRENT['puzzle'] = None
         app_module.CURRENT['solution'] = None
+        app_module.CURRENT['difficulty'] = None
+        app_module.CURRENT['clues'] = None
     
     return flask_app.test_client()
 
@@ -38,4 +40,6 @@ def app_context(flask_app):
         # Reset the global CURRENT state
         app_module.CURRENT['puzzle'] = None
         app_module.CURRENT['solution'] = None
+        app_module.CURRENT['difficulty'] = None
+        app_module.CURRENT['clues'] = None
         yield flask_app

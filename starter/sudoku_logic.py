@@ -4,6 +4,30 @@ import random
 SIZE = 9
 EMPTY = 0
 
+# Difficulty levels mapped to clue counts
+DIFFICULTY_LEVELS = {
+    'easy': 40,
+    'medium': 35,
+    'hard': 30
+}
+
+DEFAULT_DIFFICULTY = 'medium'
+
+def get_clues_for_difficulty(difficulty):
+    """
+    Get the number of clues for a given difficulty level.
+    
+    Args:
+        difficulty: One of 'easy', 'medium', 'hard', or an integer clue count
+        
+    Returns:
+        Integer number of clues. Defaults to 'medium' (35) if difficulty is invalid.
+    """
+    if isinstance(difficulty, int):
+        return difficulty
+    difficulty_str = str(difficulty).lower().strip()
+    return DIFFICULTY_LEVELS.get(difficulty_str, DIFFICULTY_LEVELS[DEFAULT_DIFFICULTY])
+
 def deep_copy(board):
     return copy.deepcopy(board)
 

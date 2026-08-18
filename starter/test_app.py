@@ -23,6 +23,25 @@ class TestIndexRoute:
         assert response.content_type is not None
         assert 'text/html' in response.content_type, "Index should return HTML"
 
+    def test_index_contains_leaderboard_section(self, client):
+        """Verify the page includes the Top 10 leaderboard markup."""
+        response = client.get('/')
+        html = response.get_data(as_text=True)
+
+        assert 'Top 10 Leaderboard' in html, "Leaderboard title should be present"
+        assert 'No scores yet' in html, "Empty leaderboard state should be displayed"
+        assert 'Rank' in html and 'Name' in html and 'Time' in html, \
+            "Leaderboard column headers should be present"
+
+    def test_index_contains_completion_modal(self, client):
+        """Verify the page includes the win modal and player-name form."""
+        response = client.get('/')
+        html = response.get_data(as_text=True)
+
+        assert 'Puzzle Complete!' in html, "Completion modal title should be present"
+        assert 'Player name' in html, "Player name label should be present"
+        assert 'Save Score' in html, "Save score action should be present"
+
 
 class TestNewGameRoute:
     """Tests for the /new route (puzzle generation)."""
@@ -96,6 +115,111 @@ class TestNewGameRoute:
             data = response.get_json()
             clue_count = sum(1 for row in data['puzzle'] for cell in row if cell != 0)
             assert clue_count == clues, f"Should create puzzle with {clues} clues"
+
+
+class TestDifficultySelector:
+    """Tests for the difficulty selector feature."""
+
+    def test_difficulty_easy_returns_40_clues(self, client):
+        """Verify difficulty=easy generates puzzle with 40 clues."""
+        response = client.get('/new?difficulty=easy')
+        data = response.get_json()
+        puzzle = data['puzzle']
+        
+        clue_count = sum(1 for row in puzzle for cell in row if cell != 0)
+        assert clue_count == 40, f"Easy should have 40 clues, got {clue_count}"
+
+    def test_difficulty_medium_returns_35_clues(self, client):
+        """Verify difficulty=medium generates puzzle with 35 clues."""
+        response = client.get('/new?difficulty=medium')
+        data = response.get_json()
+        puzzle = data['puzzle']
+        
+        clue_count = sum(1 for row in puzzle for cell in row if cell != 0)
+        assert clue_count == 35, f"Medium should have 35 clues, got {clue_count}"
+
+    def test_difficulty_hard_returns_30_clues(self, client):
+        """Verify difficulty=hard generates puzzle with 30 clues."""
+        response = client.get('/new?difficulty=hard')
+        data = response.get_json()
+        puzzle = data['puzzle']
+        
+        clue_count = sum(1 for row in puzzle for cell in row if cell != 0)
+        assert clue_count == 30, f"Hard should have 30 clues, got {clue_count}"
+
+    def test_difficulty_case_insensitive(self, client):
+        """Verify difficulty parameter is case insensitive."""
+        for difficulty_variant in ['EASY', 'Easy', 'eAsY']:
+            response = client.get(f'/new?difficulty={difficulty_variant}')
+            data = response.get_json()
+            puzzle = data['puzzle']
+            
+            clue_count = sum(1 for row in puzzle for cell in row if cell != 0)
+            assert clue_count == 40, f"Difficulty {difficulty_variant} should be case insensitive"
+
+    def test_difficulty_invalid_falls_back_to_medium(self, client):
+        """Verify invalid difficulty value falls back to medium (35 clues)."""
+        response = client.get('/new?difficulty=impossible')
+        data = response.get_json()
+        puzzle = data['puzzle']
+        
+        clue_count = sum(1 for row in puzzle for cell in row if cell != 0)
+        assert clue_count == 35, f"Invalid difficulty should default to medium (35), got {clue_count}"
+
+    def test_difficulty_stored_in_state(self, client, flask_app):
+        """Verify selected difficulty is stored in CURRENT state."""
+        client.get('/new?difficulty=hard')
+        
+        with flask_app.app_context():
+            from app import CURRENT
+            assert CURRENT['difficulty'] == 'hard', "Difficulty should be stored in state"
+            assert CURRENT['clues'] == 30, "Clue count should also be stored"
+
+    def test_difficulty_not_stored_when_using_clues(self, client, flask_app):
+        """Verify difficulty is not stored when using clues parameter."""
+        client.get('/new?clues=45')
+        
+        with flask_app.app_context():
+            from app import CURRENT
+            assert CURRENT['difficulty'] is None, "Difficulty should be None when using clues"
+            assert CURRENT['clues'] == 45, "Clue count should be stored"
+
+    def test_clues_parameter_takes_precedence_over_difficulty(self, client):
+        """Verify clues parameter takes precedence over difficulty."""
+        # Even if difficulty is specified, clues should take precedence
+        response = client.get('/new?difficulty=easy&clues=32')
+        data = response.get_json()
+        puzzle = data['puzzle']
+        
+        clue_count = sum(1 for row in puzzle for cell in row if cell != 0)
+        assert clue_count == 32, "Clues parameter should override difficulty"
+
+    def test_difficulty_backward_compatibility(self, client):
+        """Verify /new without difficulty uses default medium difficulty."""
+        response = client.get('/new')
+        data = response.get_json()
+        puzzle = data['puzzle']
+        
+        clue_count = sum(1 for row in puzzle for cell in row if cell != 0)
+        assert clue_count == 35, "Default /new should use medium (35 clues)"
+
+    def test_all_difficulties_generate_valid_puzzles(self, client, flask_app):
+        """Verify all difficulty levels generate valid puzzles with unique solutions."""
+        for difficulty in ['easy', 'medium', 'hard']:
+            client.get(f'/new?difficulty={difficulty}')
+            
+            with flask_app.app_context():
+                from app import CURRENT
+                puzzle = CURRENT['puzzle']
+                solution = CURRENT['solution']
+                
+                # Puzzle should have clues
+                clue_count = sum(1 for row in puzzle for cell in row if cell != 0)
+                assert clue_count > 0, f"{difficulty} puzzle should have clues"
+                
+                # Solution should be complete
+                complete_count = sum(1 for row in solution for cell in row if cell != 0)
+                assert complete_count == 81, f"{difficulty} solution should be complete"
 
 
 class TestCheckRoute:
@@ -254,3 +378,141 @@ class TestGameStateManagement:
         # Solutions should be different (with high probability)
         assert first_solution != second_solution, \
             "New game should overwrite previous state"
+
+
+class TestHintRoute:
+    """Tests for the /hint route (hint feature)."""
+
+    def test_hint_without_active_game_returns_error(self, client):
+        """Verify /hint returns error when no game is in progress."""
+        response = client.get('/hint')
+        assert response.status_code == 400, "Should return 400 for no active game"
+        
+        data = response.get_json()
+        assert 'error' in data, "Error response should contain error message"
+
+    def test_hint_returns_correct_structure(self, client):
+        """Verify /hint returns row, col, and value."""
+        client.get('/new')
+        
+        response = client.get('/hint')
+        assert response.status_code == 200, "/hint should return 200"
+        
+        data = response.get_json()
+        assert 'row' in data, "Response should contain 'row'"
+        assert 'col' in data, "Response should contain 'col'"
+        assert 'value' in data, "Response should contain 'value'"
+        assert isinstance(data['row'], int), "Row should be an integer"
+        assert isinstance(data['col'], int), "Column should be an integer"
+        assert isinstance(data['value'], int), "Value should be an integer"
+
+    def test_hint_returns_valid_coordinates(self, client):
+        """Verify hint coordinates are within board bounds."""
+        client.get('/new')
+        
+        response = client.get('/hint')
+        data = response.get_json()
+        
+        row = data['row']
+        col = data['col']
+        
+        assert 0 <= row < 9, "Row should be 0-8"
+        assert 0 <= col < 9, "Column should be 0-8"
+
+    def test_hint_returns_valid_value(self, client):
+        """Verify hinted value is 1-9."""
+        client.get('/new')
+        
+        response = client.get('/hint')
+        data = response.get_json()
+        
+        value = data['value']
+        assert 1 <= value <= 9, "Hinted value should be 1-9"
+
+    def test_hint_matches_solution(self, client, flask_app):
+        """Verify hint value matches the solution."""
+        client.get('/new')
+        
+        response = client.get('/hint')
+        data = response.get_json()
+        
+        row = data['row']
+        col = data['col']
+        hinted_value = data['value']
+        
+        with flask_app.app_context():
+            from app import CURRENT
+            solution = CURRENT['solution']
+            assert solution[row][col] == hinted_value, \
+                "Hinted value should match solution"
+
+    def test_hint_empty_cell_was_originally_empty(self, client, flask_app):
+        """Verify hint is provided for a cell that was originally empty."""
+        client.get('/new')
+        
+        with flask_app.app_context():
+            from app import CURRENT
+            original_puzzle = [row[:] for row in CURRENT['puzzle']]
+        
+        response = client.get('/hint')
+        data = response.get_json()
+        
+        row = data['row']
+        col = data['col']
+        
+        # Cell should have been empty in original puzzle
+        assert original_puzzle[row][col] == 0, \
+            "Hinted cell should have been empty in original puzzle"
+
+    def test_multiple_hints_provide_different_cells(self, client):
+        """Verify multiple hints provide different empty cells."""
+        client.get('/new')
+        
+        response1 = client.get('/hint')
+        data1 = response1.get_json()
+        cell1 = (data1['row'], data1['col'])
+        
+        response2 = client.get('/hint')
+        data2 = response2.get_json()
+        cell2 = (data2['row'], data2['col'])
+        
+        assert cell1 != cell2, "Different hints should fill different cells"
+
+    def test_hint_error_when_all_cells_filled(self, client):
+        """Verify /hint returns error when no empty cells remain."""
+        client.get('/new?clues=45')  # Many clues, fewer empty cells
+        
+        # Keep requesting hints until all cells are filled
+        empty_cells_left = 81 - 45
+        
+        for _ in range(empty_cells_left):
+            response = client.get('/hint')
+            assert response.status_code == 200, "Should provide hints while cells exist"
+        
+        # Next hint should fail
+        response = client.get('/hint')
+        assert response.status_code == 400, "Should return 400 when no empty cells"
+        data = response.get_json()
+        assert 'error' in data, "Should include error message"
+
+    def test_hint_persists_filled_cell_across_requests(self, client, flask_app):
+        """Verify hinted cells remain filled for subsequent hint requests."""
+        client.get('/new')
+        
+        # Get first hint
+        response1 = client.get('/hint')
+        data1 = response1.get_json()
+        cell1 = (data1['row'], data1['col'])
+        value1 = data1['value']
+        
+        # Get second hint
+        response2 = client.get('/hint')
+        data2 = response2.get_json()
+        
+        # Verify first cell is still filled in the puzzle
+        with flask_app.app_context():
+            from app import CURRENT
+            puzzle = CURRENT['puzzle']
+            assert puzzle[cell1[0]][cell1[1]] == value1, \
+                "First hinted cell should remain filled"
+

@@ -2,17 +2,84 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sudoku Game</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <h1>Sudoku Game</h1>
+  
+  <div class="game-info">
+    <div class="timer-display">
+      <span class="timer-label">Time:</span>
+      <span id="timer">00:00</span>
+    </div>
+  </div>
+
+  <div class="difficulty-selector">
+    <label for="difficulty-select">Difficulty:</label>
+    <div class="difficulty-options">
+      <label class="difficulty-option">
+        <input type="radio" name="difficulty" value="easy" />
+        <span>Easy</span>
+      </label>
+      <label class="difficulty-option">
+        <input type="radio" name="difficulty" value="medium" checked />
+        <span>Medium</span>
+      </label>
+      <label class="difficulty-option">
+        <input type="radio" name="difficulty" value="hard" />
+        <span>Hard</span>
+      </label>
+    </div>
+  </div>
+
   <div id="sudoku-board"></div>
   <div class="controls">
     <button id="new-game">New Game</button>
     <button id="check-solution">Check Solution</button>
+    <button id="hint">Hint</button>
     <span id="message"></span>
   </div>
+  <div class="hint-counter">
+    <span id="hints-used">Hints Used: 0</span>
+  </div>
+
+  <div id="completion-modal" class="completion-modal" hidden>
+    <div class="completion-dialog" role="dialog" aria-modal="true" aria-labelledby="completion-title">
+      <button type="button" class="modal-close" id="close-completion-modal" aria-label="Close completion dialog">×</button>
+      <h2 id="completion-title">Puzzle Complete!</h2>
+      <p class="completion-summary" id="completion-summary">Congratulations! You solved the puzzle!</p>
+      <form id="completion-form" novalidate>
+        <label for="player-name">Player name</label>
+        <input id="player-name" name="player-name" type="text" maxlength="30" autocomplete="name" placeholder="Enter your name" aria-required="true" required>
+        <div class="modal-actions">
+          <button type="submit" class="primary-button">Save Score</button>
+          <button type="button" class="secondary-button" id="cancel-completion">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <section class="leaderboard-panel" aria-labelledby="leaderboard-title">
+    <h2 id="leaderboard-title">Top 10 Leaderboard</h2>
+    <div id="leaderboard-empty" class="leaderboard-empty" hidden>No scores yet</div>
+    <div class="leaderboard-table-wrap">
+      <table class="leaderboard-table" aria-live="polite">
+        <thead>
+          <tr>
+            <th scope="col">Rank</th>
+            <th scope="col">Name</th>
+            <th scope="col">Time</th>
+            <th scope="col">Hints</th>
+            <th scope="col">Difficulty</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+  </section>
+
   <script src="/static/main.js"></script>
 </body>
 </html>
