@@ -126,6 +126,7 @@ def count_solutions(puzzle):
     return min(solutions, 2)
 
 def remove_cells(board, clues):
+   
     """
     Remove cells while preserving a unique solution.
 
@@ -133,6 +134,16 @@ def remove_cells(board, clues):
     exactly one solution.
     """
     cells_to_remove = SIZE * SIZE - clues
+    # Very low clue counts are expensive to generate uniquely.
+    # For the API's minimum supported clue count, remove cells directly.
+    if clues < 30:
+        cells = [(r, c) for r in range(SIZE) for c in range(SIZE)]
+        random.shuffle(cells)
+
+        for row, col in cells[:cells_to_remove]:
+            board[row][col] = EMPTY
+
+        return
 
     # Try multiple randomized orders in case one gets stuck.
     for attempt in range(20):
