@@ -15,6 +15,8 @@
     --warning: #f57c00;
     --line: #d1d5db;
     --shadow: rgba(15, 23, 42, 0.12);
+    --block-color-a: #fafafa;
+    --block-color-b: #eef4f8;
 }
 
 html {
@@ -163,7 +165,7 @@ h1 {
     aspect-ratio: 1 / 1;
     min-width: 0;
     border: 1px solid #b8c0cc;
-    background: #fafafa;
+    background: var(--block-color-a);
     color: var(--text);
     text-align: center;
     font-size: clamp(1rem, 3.4vw, 1.6rem);
@@ -174,6 +176,15 @@ h1 {
     transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     -webkit-appearance: none;
     appearance: none;
+}
+
+:where(
+    .sudoku-row:nth-child(-n + 3) .sudoku-cell:nth-child(n + 4):nth-child(-n + 6),
+    .sudoku-row:nth-child(n + 4):nth-child(-n + 6) .sudoku-cell:nth-child(-n + 3),
+    .sudoku-row:nth-child(n + 4):nth-child(-n + 6) .sudoku-cell:nth-child(n + 7),
+    .sudoku-row:nth-child(n + 7) .sudoku-cell:nth-child(n + 4):nth-child(-n + 6)
+) {
+    background: var(--block-color-b);
 }
 
 .sudoku-cell:focus-visible,
@@ -192,14 +203,14 @@ input:focus-visible {
 .sudoku-cell.invalid {
     background: #ffebee;
     border-color: var(--danger);
-    border-width: 2px;
+    box-shadow: inset 0 0 0 1px var(--danger);
     color: #7f1d1d;
 }
 
 .sudoku-cell.conflict {
     background: #fff3e0;
     border-color: var(--warning);
-    border-width: 2px;
+    box-shadow: inset 0 0 0 1px var(--warning);
     color: #9a4d00;
 }
 
@@ -212,7 +223,7 @@ input:focus-visible {
 .sudoku-cell.hinted {
     background: #dcfce7;
     border-color: var(--success);
-    border-width: 2px;
+    box-shadow: inset 0 0 0 1px var(--success);
     color: var(--success);
     font-weight: 700;
 }
