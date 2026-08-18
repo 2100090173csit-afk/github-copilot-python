@@ -42,6 +42,22 @@ python app.py
 
 7. Open http://127.0.0.1:5000 in your browser.
 
+## Testing
+
+A comprehensive baseline test suite is included to verify the current behavior of the legacy Sudoku application without any code modifications.
+
+To run the baseline tests:
+
+```bash
+pytest
+```
+
+The test suite includes:
+- **21 unit tests** for `sudoku_logic.py` (board creation, validation, puzzle generation)
+- **18 integration tests** for `app.py` (Flask routes, state management, solution checking)
+
+For more detailed test documentation, see [TEST_DOCUMENTATION.md](starter/TEST_DOCUMENTATION.md).
+
 ## Project Instructions
 
 Use GitHub Copilot to refactor the code for this game to add more advanced features. The goal is to create a more modern and maintainable codebase and add additional functionality to the final product. You can use any combination of code completion and chat features, like Ask, Edit, or Agent modes.
