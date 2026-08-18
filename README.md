@@ -1,62 +1,96 @@
 # Refactor a Sudoku Game written in Python Flask
 
-Use this simple Sudoku game as a starting point to practice your skills with GitHub Copilot. The goal is to refactor the code to use modern technologies, while also adding new features and improving the overall user experience.
+Use this simple Sudoku game as a starting point to practice your skills with GitHub Copilot. The goal is to refactor the code, add new features, improve maintainability, and enhance the overall user experience.
 
 ## Getting Started
 
-Follow these instructions to get a copy of the project up and running on your local machine.
+Follow these instructions to run the Sudoku game locally.
 
 ### Dependencies
 
-```
-- Modern web browser (Chrome, Firefox, Edge, etc.)
 - Python 3
-```
+- Modern web browser (Chrome, Firefox, Edge, etc.)
 
 ### Installation
 
-1. Fork this repository to your GitHub account. (You can use the "Fork" button on the top right corner of the repository page.)
-
-2. Clone your forked repository to your local machine.
-
-3. Open a terminal window and navigate to the "github-copilot-python/starter" directory.
-
-4. Create a Python virtual environment and activate it (optional but highly recommended).
+1. Clone the repository:
 
 ```bash
-python3 -m venv .venv
+git clone <your-repository-url>
+cd github-copilot-python
+```
+
+2. Create a Python virtual environment (recommended):
+
+```bash
+python -m venv .venv
+```
+
+3. Activate the virtual environment.
+
+**Windows:**
+
+```bash
+.venv\Scripts\activate
+```
+
+**macOS/Linux:**
+
+```bash
 source .venv/bin/activate
 ```
 
-5. Install required Python packages.
+4. Install the required packages:
 
 ```bash
-pip install -r requirements.txt
+pip install -r starter/requirements.txt
 ```
 
-6. Run the Flask app.
+### Run the Application
+
+From the project root, run:
 
 ```bash
-python app.py
+python starter/app.py
 ```
 
-7. Open http://127.0.0.1:5000 in your browser.
+Open the application in your browser:
+
+```text
+http://127.0.0.1:5000
+```
 
 ## Testing
 
-A comprehensive baseline test suite is included to verify the current behavior of the legacy Sudoku application without any code modifications.
+The project includes an automated test suite covering Sudoku logic and Flask application behavior.
 
-To run the baseline tests:
+Run all tests from the project root:
 
 ```bash
-pytest
+pytest -q
 ```
 
-The test suite includes:
-- **21 unit tests** for `sudoku_logic.py` (board creation, validation, puzzle generation)
-- **18 integration tests** for `app.py` (Flask routes, state management, solution checking)
+The current test suite contains **45 tests** covering:
 
-For more detailed test documentation, see [TEST_DOCUMENTATION.md](starter/TEST_DOCUMENTATION.md).
+- Sudoku board creation and validation
+- Sudoku solution generation
+- Solution counting
+- Unique puzzle generation
+- Different clue counts
+- Puzzle generation performance
+- Flask routes
+- New game functionality
+- Puzzle state management
+- Solution checking
+- Invalid input handling
+
+Current test result:
+
+```text
+45 passed
+```
+
+For detailed test documentation, see [TEST_DOCUMENTATION.md](starter/TEST_DOCUMENTATION.md).
 
 ## Project Instructions
 
