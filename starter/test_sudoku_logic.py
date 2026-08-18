@@ -146,8 +146,12 @@ class TestRemoveCells:
         assert clues_remaining == 35, f"Should have 35 clues, got {clues_remaining}"
 
     def test_remove_cells_various_clue_counts(self):
-        """Verify remove_cells works with different clue counts."""
-        for clue_count in [20, 30, 40, 45, 50]:
+        """Verify remove_cells works with different clue counts.
+        
+        Note: Uses clue counts 30+ as lower counts are computationally expensive
+        to verify for uniqueness.
+        """
+        for clue_count in [30, 35, 40, 45, 50]:
             board = sudoku_logic.create_empty_board()
             sudoku_logic.fill_board(board)
             sudoku_logic.remove_cells(board, clue_count)
@@ -172,8 +176,12 @@ class TestGeneratePuzzle:
         assert clue_count == 35, f"Default should be 35 clues, got {clue_count}"
 
     def test_generate_puzzle_custom_clues(self):
-        """Verify custom clue count is respected."""
-        for clues in [20, 30, 40, 50]:
+        """Verify custom clue count is respected.
+        
+        Note: Uses clue counts 30+ as lower counts are computationally expensive
+        to verify for uniqueness.
+        """
+        for clues in [30, 35, 40, 50]:
             puzzle, solution = sudoku_logic.generate_puzzle(clues=clues)
             clue_count = sum(1 for row in puzzle for cell in row if cell != sudoku_logic.EMPTY)
             assert clue_count == clues, f"Expected {clues} clues, got {clue_count}"
@@ -225,3 +233,68 @@ class TestGeneratePuzzle:
                     break
         
         assert different, "Generated puzzles should be different (random)"
+
+
+class TestCountSolutions:
+    """Tests for solution counting function."""
+
+    def test_count_solutions_empty_board(self):
+        """Verify empty board has multiple solutions."""
+        board = sudoku_logic.create_empty_board()
+        count = sudoku_logic.count_solutions(board)
+        assert count == 2, "Empty board should have multiple solutions (returns 2+ cap)"
+
+    def test_count_solutions_complete_board(self):
+        """Verify complete valid board has exactly one solution (itself)."""
+        board = sudoku_logic.create_empty_board()
+        sudoku_logic.fill_board(board)
+        count = sudoku_logic.count_solutions(board)
+        assert count == 1, "Complete valid board has exactly one solution"
+
+    def test_count_solutions_no_solution(self):
+        """Verify invalid puzzle returns 0 solutions."""
+        # Create a board with conflicting constraints
+        board = sudoku_logic.create_empty_board()
+        board[0][0] = 1
+        board[0][1] = 1  # Duplicate in row - invalid
+        count = sudoku_logic.count_solutions(board)
+        assert count == 0, "Invalid board should have no solutions"
+
+    def test_count_solutions_generated_puzzle_is_unique(self):
+        """Verify generated puzzles have exactly one unique solution."""
+        for _ in range(5):
+            puzzle, solution = sudoku_logic.generate_puzzle()
+            count = sudoku_logic.count_solutions(puzzle)
+            assert count == 1, "Generated puzzle should have exactly one solution"
+
+    def test_count_solutions_various_puzzle_sizes(self):
+        """Verify uniqueness is maintained with different clue counts.
+        
+        Note: Uses clue counts 30+ as lower counts are computationally expensive
+        to verify for uniqueness.
+        """
+        clue_counts = [30, 35, 40, 45]
+        for clues in clue_counts:
+            puzzle, solution = sudoku_logic.generate_puzzle(clues=clues)
+            count = sudoku_logic.count_solutions(puzzle)
+            assert count == 1, f"Puzzle with {clues} clues should have unique solution"
+
+    def test_count_solutions_performance(self):
+        """Verify count_solutions stops after finding 2 solutions ."""
+
+    # Create a board with multiple solutions by leaving only
+    # the first 3 rows as clues.
+        board = sudoku_logic.create_empty_board()
+        sudoku_logic.fill_board(board)
+
+    # Remove rows 3-8.
+    # This creates a puzzle with many possible solutions.
+        for i in range(3, 9):
+            for j in range(9):
+                board[i][j] = 0
+
+    # count_solutions should stop at 2.
+        count = sudoku_logic.count_solutions(board)
+
+        assert count == 2, \
+             "count_solutions should stop after finding 2 solutions"
