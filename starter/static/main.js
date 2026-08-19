@@ -10,6 +10,40 @@ let isPuzzleSolved = false;
 let hasSubmittedLeaderboardScore = false;
 const LEADERBOARD_KEY = 'sudoku-top-scores';
 const MAX_LEADERBOARD_SCORES = 10;
+const THEME_KEY = 'sudoku-theme';
+
+function applyTheme(theme) {
+  const selectedTheme = theme === 'dark' ? 'dark' : 'light';
+  const toggle = document.getElementById('theme-toggle');
+  const isDark = selectedTheme === 'dark';
+
+  document.body.dataset.theme = selectedTheme;
+  if (toggle) {
+    toggle.setAttribute('aria-pressed', String(isDark));
+    toggle.textContent = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+  }
+}
+
+function initializeTheme() {
+  let savedTheme = 'light';
+  try {
+    savedTheme = window.localStorage.getItem(THEME_KEY) || 'light';
+  } catch (error) {
+    savedTheme = 'light';
+  }
+
+  applyTheme(savedTheme);
+}
+
+function toggleTheme() {
+  const nextTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(nextTheme);
+  try {
+    window.localStorage.setItem(THEME_KEY, nextTheme);
+  } catch (error) {
+    // The theme still applies when storage is unavailable.
+  }
+}
 
 // Timer functions
 function formatTime(seconds) {
@@ -276,7 +310,8 @@ async function checkForSolvedBoard() {
     if (incorrect.size === 0) {
       const msg = document.getElementById('message');
       if (msg) {
-        msg.style.color = '#388e3c';
+        msg.classList.remove('message-error');
+        msg.classList.add('message-success');
         msg.innerText = `Congratulations! You solved the puzzle in ${formatTime(elapsedSeconds)} with ${hintsUsed} hint(s).`;
       }
       recordCompletedGame();
@@ -303,7 +338,8 @@ async function useHint() {
   }
   
   if (emptyCellCount === 0) {
-    msg.style.color = '#d32f2f';
+    msg.classList.remove('message-success');
+    msg.classList.add('message-error');
     msg.innerText = 'Puzzle is already complete! No hints needed.';
     return;
   }
@@ -312,7 +348,8 @@ async function useHint() {
   const res = await fetch('/hint');
   
   if (!res.ok) {
-    msg.style.color = '#d32f2f';
+    msg.classList.remove('message-success');
+    msg.classList.add('message-error');
     msg.innerText = 'No more empty cells to hint!';
     return;
   }
@@ -320,7 +357,8 @@ async function useHint() {
   const data = await res.json();
   
   if (data.error) {
-    msg.style.color = '#d32f2f';
+    msg.classList.remove('message-success');
+    msg.classList.add('message-error');
     msg.innerText = data.error;
     return;
   }
@@ -562,11 +600,13 @@ async function checkSolution() {
   
   // Show result message
   if (incorrect.size === 0) {
-    msg.style.color = '#388e3c';
+    msg.classList.remove('message-error');
+    msg.classList.add('message-success');
     msg.innerText = `Congratulations! You solved the puzzle in ${formatTime(elapsedSeconds)} with ${hintsUsed} hint(s).`;
     recordCompletedGame();
   } else {
-    msg.style.color = '#d32f2f';
+    msg.classList.remove('message-success');
+    msg.classList.add('message-error');
     msg.innerText = `${incorrect.size} cell(s) are incorrect. Keep trying!`;
   }
 }
@@ -574,11 +614,17 @@ async function checkSolution() {
 // Event delegation for board input
 document.addEventListener('DOMContentLoaded', () => {
   const boardDiv = document.getElementById('sudoku-board');
+  const themeToggle = document.getElementById('theme-toggle');
   const completionForm = document.getElementById('completion-form');
   const closeButton = document.getElementById('close-completion-modal');
   const cancelButton = document.getElementById('cancel-completion');
   renderLeaderboard();
+  initializeTheme();
   updateControlState();
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+  }
   
   // Single event listener for all cells using event delegation
   boardDiv.addEventListener('input', (e) => {

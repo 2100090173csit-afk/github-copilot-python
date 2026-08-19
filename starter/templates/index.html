@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <h1>Sudoku Game</h1>
+  <div class="app-shell">
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false">Switch to dark mode</button>
+    <h1>Sudoku Game</h1>
   
   <div class="game-info">
     <div class="timer-display">
@@ -61,7 +63,7 @@
     </div>
   </div>
 
-  <section class="leaderboard-panel" aria-labelledby="leaderboard-title">
+  <section class="leaderboard leaderboard-panel" aria-labelledby="leaderboard-title">
     <h2 id="leaderboard-title">Top 10 Leaderboard</h2>
     <div id="leaderboard-empty" class="leaderboard-empty" hidden>No scores yet</div>
     <div class="leaderboard-table-wrap">
@@ -80,6 +82,7 @@
     </div>
   </section>
 
+  </div>
   <script src="/static/main.js"></script>
 </body>
 </html>
